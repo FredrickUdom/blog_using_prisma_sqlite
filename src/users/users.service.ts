@@ -38,9 +38,11 @@ export class UsersService {
   async update(id: string, updateUserDto: UpdateUserDto) {
     try {
       const updateUser = await this.prismaService.user.update({data:updateUserDto, where:{id:id}});
+      delete updateUser.password;
       return {
-        message: 'user successfully updated',
-        statusCode: 200
+        message: `user successfully updated,`,
+        statusCode: 200,
+        userDetails: updateUser
       };
     } catch (error) {
       if(error.code === "P2025"){
