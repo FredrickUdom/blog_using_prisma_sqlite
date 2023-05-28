@@ -39,7 +39,23 @@ export class UsersService {
   }
 
   async remove(id: string) {
-   const deleteUser = await this.prismaService.user.delete({where:{id:id}});
-   return deleteUser;
+    try {
+      const deleteUser = await this.prismaService.user.delete({where:{id:id}});
+      if(deleteUser){
+       return{
+         message: `user: ${deleteUser.firstName}, successfully deleted`,
+         statusCode: 200
+       }
+      }
+
+    } catch (error) {
+      if(error.code === "P2025"){
+        return {
+          message: 'sorry no such user found to delete',
+          statusCode: 400
+         };
+      }
+    }
+
   }
 }
