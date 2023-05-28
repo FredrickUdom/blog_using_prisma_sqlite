@@ -12,6 +12,7 @@ export class UsersService {
       const {firstName, lastName, email, password} = createUserDto;
       const hashPassword = await bcrypt.hash(password, 10);
       const createUser = await this.prismaService.user.create({data:{firstName, lastName, email, password:hashPassword}});
+      delete createUser.password;
       return createUser;
       
     } catch (error) {
@@ -30,12 +31,26 @@ export class UsersService {
 
   async findOne(id: string) {
     const findOne = await this.prismaService.user.findUnique({where:{id:id}});
+    delete findOne.password;
     return findOne; 
   }
 
   async update(id: string, updateUserDto: UpdateUserDto) {
-    const updateUser = await this.prismaService.user.update({data:updateUserDto, where:{id:id}});
-    return updateUser;
+    try {
+      const updateUser = await this.prismaService.user.update({data:updateUserDto, where:{id:id}});
+      return {
+        message: 'user successfully updated',
+        statusCode: 200
+      };
+    } catch (error) {
+      if(error.code === "P2025"){
+        return {
+          message: 'sorry no such user found to update',
+          statusCode: 400
+         };
+      }
+    }
+   
   }
 
   async remove(id: string) {
