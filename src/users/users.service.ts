@@ -1,14 +1,26 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, Injectable } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UsersService {
   constructor(private prismaService: PrismaService){}
-  async create(createUserDto: CreateUserDto) {
-    const createUser = await this.prismaService.user.create({data:createUserDto})
-    return createUser;
+  async createUser(createUserDto: CreateUserDto) {
+    try {
+      const {firstName, lastName, email, password} = createUserDto;
+      const hashPassword = await bcrypt.hash(password, 10);
+      const createUser = await this.prismaService.user.create({data:{firstName, lastName, email, password:hashPassword}});
+      return createUser;
+      
+    } catch (error) {
+      if(error.code === "P2002"){
+        throw new HttpException('sorry user with same email already exist', 400)
+      }
+      return error;
+    }
+   
   }
 
   async findAll() {
