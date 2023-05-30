@@ -1,8 +1,11 @@
-import { HttpException, Injectable } from '@nestjs/common';
+import { HttpException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
+import {Query } from 'express-serve-static-core';
+import { Prisma } from '@prisma/client';
+import { User } from './entities/user.entity';
 
 @Injectable()
 export class UsersService {
@@ -24,14 +27,17 @@ export class UsersService {
    
   }
 
-  async findAll() {
-    const findOne = await this.prismaService.user.findMany();
+  async findAll(query:Query): Promise<User[]> {
+    const findOne = await this.prismaService.user.findMany()
     
     return findOne;
   }
 
   async findOne(id: string) {
     const findOne = await this.prismaService.user.findUnique({where:{id:id}});
+    if(!findOne){
+      throw new NotFoundException('no user found with such id found');
+    }
     delete findOne.password;
     return findOne; 
   }
